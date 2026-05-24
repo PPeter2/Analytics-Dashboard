@@ -1,2 +1,1 @@
-#Analitics Dashboard
-<br>
+Analitics Dashboard
