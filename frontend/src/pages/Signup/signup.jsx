@@ -1,19 +1,48 @@
-import React from 'react'
-import { Link, useNavigate } from 'react-router-dom' // 1. Εισαγωγή Link και useNavigate
+import React, { useState } from 'react' // 1. Προσθήκη useState για τα inputs
+import { Link, useNavigate } from 'react-router-dom'
 import style from './signup.module.css'
-import MainPage from '../../pages/Main/main-page.jsx' // 2. Εισαγωγή του MainPage για πλοήγηση μετά την εγγραφή
 
-function Signup() { // Κεφαλαίο "S" για τα React components
-  const navigate = useNavigate() // 2. Αρχικοποίηση του hook πλοήγησης
+function Signup() {
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault() // Σταματάει το refresh της σελίδας
+  // 2. State για την αποθήκευση των στοιχείων της φόρμας
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(''); // Για την εμφάνιση σφαλμάτων στην οθόνη
 
-    // 3. Αποθήκευση του token για να περάσει το ProtectedRoute
-    localStorage.setItem('userToken', 'active_session_token')
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // Σταματάει το refresh της σελίδας
+    setError(''); // Μηδενισμός παλιών σφαλμάτων
 
-    // 4. Μεταφορά στο main/dashboard (Βάλε το path ακριβώς όπως το έχεις στο App.jsx)
-    navigate('/dashboard'); 
+    try {
+      // 3. Κλήση του API στο backend (χρησιμοποιούμε relative path για τον Nginx)
+      const response = await fetch('/api/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Αν το backend επιστρέψει σφάλμα (π.χ. 400), το εμφανίζουμε (θα καταγραφεί και στα metrics!)
+        throw new Error(data.error || 'Κάτι πήγε στραβά κατά την εγγραφή');
+      }
+
+      // 4. Αν η εγγραφή πετύχει, αποθηκεύουμε το token (αν επιστρέφει το signup) ή ανακατευθύνουμε στο login
+      console.log('Επιτυχής εγγραφή:', data.message);
+      
+      // Προαιρετικά: Αν το signup κάνει αυτόματα login και επιστρέφει token, το σώζεις εδώ:
+      // localStorage.setItem('userToken', data.token);
+      
+      // 5. Μεταφορά στη σελίδα σύνδεσης ή στο dashboard
+      navigate('/login'); 
+      
+    } catch (err) {
+      setError(err.message); // Εμφάνιση του μηνύματος σφάλματος στο χρήστη
+    }
   }
 
   return (
@@ -22,15 +51,32 @@ function Signup() { // Κεφαλαίο "S" για τα React components
             <h1>Sign up</h1>
             <h2>Join us and start your journey!</h2>
             
-            {/* 5. Σύνδεση της συνάρτησης handleSubmit με τη φόρμα */}
+            {/* Εμφάνιση σφάλματος αν υπάρχει */}
+            {error && <div className={style.errorMessage}>{error}</div>}
+            
             <form className={style.signupForm} onSubmit={handleSubmit}>
-                <input type="text" placeholder='John Doe' required/>
-                <input type="email" placeholder='example@email.com' required/>
-                <input type="password" placeholder='Secret Password' required/>
+                {/* Το input του ονόματος μπορεί να μείνει αν το προσθέσεις αργότερα στη βάση */}
+                <input type="text" placeholder='John Doe' />
+                
+                {/* 6. Σύνδεση των inputs με το React State */}
+                <input 
+                  type="email" 
+                  placeholder='example@email.com' 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+                <input 
+                  type="password" 
+                  placeholder='Secret Password' 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                
                 <button type='submit'>Sign Up</button>
             </form>
             
-            {/* 6. Χρήση του Link αντί για <a> για smooth πλοήγηση */}
             <p className={style.loginLink}>
               Have an account? <Link to="/login">Login</Link>
             </p>
@@ -39,4 +85,4 @@ function Signup() { // Κεφαλαίο "S" για τα React components
   )
 }
 
-export default Signup
+export default Signup;

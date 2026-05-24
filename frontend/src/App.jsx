@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom' // 1. Εισαγ
 import './App.css'
 import Signup from '../src/pages/Signup/signup.jsx'
 import Login from '../src/pages/Login/login.jsx'
-import MainPage from '../src/pages/Main/main-page.jsx'
+import MainPage from '../src/pages/Main/MainPage.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 
 function App() {

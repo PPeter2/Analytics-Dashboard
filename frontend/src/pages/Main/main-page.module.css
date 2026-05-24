@@ -1,0 +1,21 @@
+.layoutContainer {
+    display: flex;
+    background-color: #0f172a; /* Ίδιο dark background για όλη τη σελίδα */
+    min-height: 100vh;
+    color: white;
+}
+
+.mainContent {
+    flex: 1;
+    /* 👈 ΑΥΤΟ ΚΛΕΙΔΩΝΕΙ ΤΟ ΠΕΡΙΕΧΟΜΕΝΟ ΔΕΞΙΑ ΑΠΟ ΤΟ SIDEBAR */
+    margin-left: 260px; 
+    padding: 40px;
+    
+    /* Animation εμφάνισης για το περιεχόμενο */
+    opacity: 0;
+    animation: fadeIn 0.6s ease forwards 0.4s;
+}
+
+@keyframes fadeIn {
+    to { opacity: 1; }
+}
