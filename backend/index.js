@@ -142,7 +142,7 @@ app.post('/api/signup', async (req, res) => {
   }
 });
 
-// === 2. Endpoint για LOG-IN (Σύνδεση) ===
+
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
