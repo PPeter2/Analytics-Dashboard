@@ -6,9 +6,8 @@ const cors = require('cors');
 
 const app = express();
 app.use(express.json());
-app.use(cors()); // Επιτρέπει στο React frontend να στέλνει αιτήματα
+app.use(cors());
 
-// Σύνδεση με την PostgreSQL του Docker (τραβάει τις ρυθμίσεις από το docker-compose)
 const pool = new Pool({
   host: process.env.DB_HOST || 'db',
   user: process.env.DB_USER || 'postgres',
@@ -17,10 +16,8 @@ const pool = new Pool({
   port: 5432,
 });
 
-// Αυτόματη δημιουργία των πινάκων χρηστών και μετρικών κατά την εκκίνηση
 const initDb = async () => {
   try {
-    // Δημιουργία πίνακα χρηστών
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -29,9 +26,8 @@ const initDb = async () => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    console.log("🚀 [Database] Ο πίνακας 'users' είναι έτοιμος!");
+    console.log("[Database] User's table is ready");
 
-    // Δημιουργία πίνακα για τα metrics (αντίστοιχο του Python persist_request_metric)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS request_metrics (
         id SERIAL PRIMARY KEY,
@@ -43,14 +39,13 @@ const initDb = async () => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    console.log("📊 [Database] Ο πίνακας 'request_metrics' είναι έτοιμος!");
+    console.log("[Database] The table request_metrics is ready");
   } catch (err) {
-    console.error("❌ [Database] Σφάλμα αρχικοποίησης βάσης:", err);
+    console.error("[Database] Database error:", err);
   }
 };
 initDb();
 
-// === ΣΥΝΑΡΤΗΣΗ ΑΠΟΘΗΚΕΥΣΗΣ ΜΕΤΡΙΚΩΝ ΣΤΗ ΒΑΣΗ ===
 const persistRequestMetric = async (metric) => {
   try {
     await pool.query(
@@ -59,26 +54,20 @@ const persistRequestMetric = async (metric) => {
       [metric.method, metric.path, metric.statusCode, metric.durationMs, metric.errorDetail]
     );
   } catch (err) {
-    console.error("❌ [Metrics DB Error] Αποτυχία αποθήκευσης μετρικών:", err.message);
+    console.error("[Metrics DB Error] Αποτυχία αποθήκευσης μετρικών:", err.message);
   }
 };
 
-// === MIDDLEWARE ΜΕΤΡΙΚΩΝ (METRICS MIDDLEWARE) ===
 const metricsMiddleware = (req, res, next) => {
   const t0 = performance.now();
-
-  // Καταγραφή μόνο αν το path ξεκινάει από /api/
   if (req.path.startsWith('/api/')) {
     const originalSend = res.send;
     let errorDetail = null;
 
-    // Παρακολούθηση του response body για την εξαγωγή σφαλμάτων
     res.send = function (body) {
       if (res.statusCode >= 400 && body) {
         try {
-          // Έλεγχος αν είναι stringified JSON ή ήδη αντικείμενο
           const data = typeof body === 'string' ? JSON.parse(body) : body;
-          // Ψάχνει για 'detail' (τύπου FastAPI) ή 'error' (τύπου Express)
           errorDetail = String(data.detail || data.error || String(body).substring(0, 300));
         } catch (e) {
           errorDetail = String(body).substring(0, 300);
@@ -88,7 +77,6 @@ const metricsMiddleware = (req, res, next) => {
       return res.send.apply(this, arguments);
     };
 
-    // Όταν ολοκληρωθεί η απάντηση στον client, υπολόγισε χρόνο και αποθήκευσε
     res.on('finish', () => {
       const durationMs = performance.now() - t0;
       
@@ -96,14 +84,10 @@ const metricsMiddleware = (req, res, next) => {
         method: req.method,
         path: req.path,
         statusCode: res.statusCode,
-        durationMs: Number(durationMs.toFixed(2)), // Στρογγυλοποίηση σε 2 δεκαδικά
+        durationMs: Number(durationMs.toFixed(2)),
         errorDetail: errorDetail
       };
-
-      // 1. Εκτύπωση στην κονσόλα (ισοδύναμο του req_metrics.record)
-      console.log(`📊 [Metric Log] ${metricPayload.method} ${metricPayload.path} - Status: ${metricPayload.statusCode} - Time: ${metricPayload.durationMs}ms`);
-      
-      // 2. Αποθήκευση στην PostgreSQL
+      console.log(`[Metric Log] ${metricPayload.method} ${metricPayload.path} - Status: ${metricPayload.statusCode} - Time: ${metricPayload.durationMs}ms`);
       persistRequestMetric(metricPayload);
     });
   }
@@ -111,17 +95,13 @@ const metricsMiddleware = (req, res, next) => {
   next();
 };
 
-// === ΕΝΕΡΓΟΠΟΙΗΣΗ MIDDLEWARE ===
-// Πρέπει να μπει ΠΡΙΝ από τα endpoints για να μπορεί να τα καταγράψει όλα!
 app.use(metricsMiddleware);
 
-
-// === 1. Endpoint για SIGN-UP (Εγγραφή) ===
 app.post('/api/signup', async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(400).json({ error: "Παρακαλώ συμπληρώστε email και password" });
+    return res.status(400).json({ error: "Please add your email and password" });
   }
 
   try {
@@ -133,12 +113,12 @@ app.post('/api/signup', async (req, res) => {
       [email, hashedPassword]
     );
 
-    res.status(201).json({ message: "Η εγγραφή ολοκληρώθηκε επιτυχώς!", user: result.rows[0] });
+    res.status(201).json({ message: "Succesfully created account", user: result.rows[0] });
   } catch (err) {
     if (err.code === '23505') { 
-      return res.status(400).json({ error: "Το email χρησιμοποιείται ήδη" });
+      return res.status(400).json({ error: "This email is already used" });
     }
-    res.status(500).json({ error: "Σφάλμα συστήματος κατά την εγγραφή" });
+    res.status(500).json({ error: "System failure" });
   }
 });
 
@@ -149,14 +129,14 @@ app.post('/api/login', async (req, res) => {
   try {
     const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     if (userResult.rows.length === 0) {
-      return res.status(400).json({ error: "Λάθος στοιχεία σύνδεσης" });
+      return res.status(400).json({ error: "Wrong Information "});
     }
 
     const user = userResult.rows[0];
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ error: "Λάθος στοιχεία σύνδεσης" });
+      return res.status(400).json({ error: "Wrong Information" });
     }
 
     const token = jwt.sign(
@@ -165,14 +145,13 @@ app.post('/api/login', async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    res.json({ message: "Επιτυχής σύνδεση!", token });
+    res.json({ message: "Succesfully logged in", token });
   } catch (err) {
-    res.status(500).json({ error: "Σφάλμα συστήματος κατά τη σύνδεση" });
+    res.status(500).json({ error: "System Failure while trying to login" });
   }
 });
 
-// Εκκίνηση του Server στη θύρα 5000
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🌐 [Backend] Ο server τρέχει μόνιμα στη θύρα ${PORT}`);
+  console.log(`[Backend] Server started succefully in port: ${PORT}`);
 });
