@@ -1,6 +1,6 @@
 .layoutContainer {
     display: flex;
-    background-color: #0f172a; /* Ίδιο dark background για όλη τη σελίδα */
+    background-color: #0f172a;
     min-height: 100vh;
     color: white;
 }

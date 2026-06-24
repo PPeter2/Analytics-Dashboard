@@ -1,21 +1,17 @@
-import React, { useState } from 'react' // 1. Προσθήκη useState για τα inputs
+import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import style from './signup.module.css'
 
 function Signup() {
   const navigate = useNavigate();
-
-  // 2. State για την αποθήκευση των στοιχείων της φόρμας
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(''); // Για την εμφάνιση σφαλμάτων στην οθόνη
-
+  const [error, setError] = useState('');
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Σταματάει το refresh της σελίδας
-    setError(''); // Μηδενισμός παλιών σφαλμάτων
+    e.preventDefault();
+    setError('');
 
     try {
-      // 3. Κλήση του API στο backend (χρησιμοποιούμε relative path για τον Nginx)
       const response = await fetch('/api/signup', {
         method: 'POST',
         headers: {
@@ -27,21 +23,13 @@ function Signup() {
       const data = await response.json();
 
       if (!response.ok) {
-        // Αν το backend επιστρέψει σφάλμα (π.χ. 400), το εμφανίζουμε (θα καταγραφεί και στα metrics!)
-        throw new Error(data.error || 'Κάτι πήγε στραβά κατά την εγγραφή');
+        throw new Error(data.error || 'Something when wrong while creating account');
       }
-
-      // 4. Αν η εγγραφή πετύχει, αποθηκεύουμε το token (αν επιστρέφει το signup) ή ανακατευθύνουμε στο login
-      console.log('Επιτυχής εγγραφή:', data.message);
-      
-      // Προαιρετικά: Αν το signup κάνει αυτόματα login και επιστρέφει token, το σώζεις εδώ:
-      // localStorage.setItem('userToken', data.token);
-      
-      // 5. Μεταφορά στη σελίδα σύνδεσης ή στο dashboard
+      console.log('Succefully created account', data.message);
       navigate('/login'); 
       
     } catch (err) {
-      setError(err.message); // Εμφάνιση του μηνύματος σφάλματος στο χρήστη
+      setError(err.message);
     }
   }
 
@@ -50,15 +38,10 @@ function Signup() {
         <div className={style.signupContainer}>
             <h1>Sign up</h1>
             <h2>Join us and start your journey!</h2>
-            
-            {/* Εμφάνιση σφάλματος αν υπάρχει */}
             {error && <div className={style.errorMessage}>{error}</div>}
             
             <form className={style.signupForm} onSubmit={handleSubmit}>
-                {/* Το input του ονόματος μπορεί να μείνει αν το προσθέσεις αργότερα στη βάση */}
                 <input type="text" placeholder='John Doe' />
-                
-                {/* 6. Σύνδεση των inputs με το React State */}
                 <input 
                   type="email" 
                   placeholder='example@email.com' 
@@ -73,7 +56,6 @@ function Signup() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
-                
                 <button type='submit'>Sign Up</button>
             </form>
             

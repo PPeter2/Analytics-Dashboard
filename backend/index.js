@@ -114,6 +114,7 @@ app.post('/api/signup', async (req, res) => {
     );
 
     res.status(201).json({ message: "Succesfully created account", user: result.rows[0] });
+    res.status(201).json({message: `Created account with email: ${email}`})
   } catch (err) {
     if (err.code === '23505') { 
       return res.status(400).json({ error: "This email is already used" });
@@ -146,8 +147,9 @@ app.post('/api/login', async (req, res) => {
     );
 
     res.json({ message: "Succesfully logged in", token });
+    res.json({ message: `Succefully logged in with email: ${email}`})
   } catch (err) {
-    res.status(500).json({ error: "System Failure while trying to login" });
+    res.status(500).json({error: "System Failure while trying to login"});
   }
 });
 

@@ -6,7 +6,7 @@ function MainPage() {
     <div className={style.layoutContainer}>
       <main className={style.mainContent}>
         <h1>Welcome to your Dashboard</h1>
-        <p>Εδώ θα μπουν τα charts και τα metrics σου...</p>
+        <p>Charts..</p>
       </main>
     </div>
   );

@@ -1,5 +1,6 @@
+//Imports
 import { useState } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom' // 1. Εισαγωγή του Router
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './App.css'
 import Signup from '../src/pages/Signup/signup.jsx'
 import Login from '../src/pages/Login/login.jsx'
@@ -10,6 +11,7 @@ import ChartsPage from './pages/Charts/charts.jsx'
 import ReportsPage from './pages/Reports/reports.jsx'
 import SettingsPage from './pages/Settings/settings.jsx'
 
+//Main Webpage
 function App() {
   return (
     <BrowserRouter>

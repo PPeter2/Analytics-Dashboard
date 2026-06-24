@@ -10,7 +10,6 @@ function Sidebar() {
     localStorage.removeItem('userToken');
     window.location.href = '/login';
   };
-
   const isActive = (path) => location.pathname === path ? style.active : '';
 
   return (
@@ -22,7 +21,6 @@ function Sidebar() {
 
       <nav className={style.nav}>
         <ul className={style.menuList}>
-          {/* Προσθήκη --item-index για το staggered animation εισόδου */}
           <li style={{ '--item-index': 1 }}>
             <Link to="/dashboard" className={`${style.navLink} ${isActive('/dashboard')}`}>
               <MdDashboard className={style.icon} />
@@ -33,6 +31,12 @@ function Sidebar() {
             <Link to="/reports" className={`${style.navLink} ${isActive('/reports')}`}>
               <MdAssessment className={style.icon} />
               <span>Reports</span>
+            </Link>
+          </li>
+          <li style={{ '--item-index': 2 }}>
+            <Link to="/charts" className={`${style.navLink} ${isActive('/charts')}`}>
+              <MdAssessment className={style.icon} />
+              <span>Charts</span>
             </Link>
           </li>
           <li style={{ '--item-index': 3 }}>
